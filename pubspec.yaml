@@ -1,0 +1,27 @@
+name: tide_slide
+description: A slide-to-confirm control for Flutter. A wavy tide rises behind the thumb and the label flips colour as it passes. LTR, RTL, keyboard and screen reader ready.
+version: 1.0.0
+repository: https://github.com/YagnikBarasiya23/tide_slide
+issue_tracker: https://github.com/YagnikBarasiya23/tide_slide/issues
+topics:
+  - slider
+  - button
+  - widget
+  - animation
+  - confirmation
+screenshots:
+  - description: Tide rising behind the thumb while dragging.
+    path: doc/screenshot.png
+
+environment:
+  sdk: ^3.13.0
+  flutter: ">=3.24.0"
+
+dependencies:
+  flutter:
+    sdk: flutter
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^6.0.0
