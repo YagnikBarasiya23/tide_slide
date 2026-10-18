@@ -11,7 +11,7 @@ A slide-to-confirm control for risky actions. Drag the thumb and a wavy tide of 
 
 ```yaml
 dependencies:
-  tide_slide: ^1.1.0
+  tide_slide: ^1.1.1
 ```
 
 ## Usage

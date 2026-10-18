@@ -1,1 +1,9 @@
 media/
+# .pubignore replaces .gitignore for pub, so repeat the build outputs here.
+build/
+.dart_tool/
+example/build/
+example/.dart_tool/
+*.iml
+.idea/
+.DS_Store

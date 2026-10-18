@@ -1,3 +1,7 @@
+## 1.1.1
+
+- Package size: build outputs were included in the 1.1.0 archive by mistake. No code changes.
+
 ## 1.1.0
 
 - New zipper style: two rows of teeth mesh shut behind the thumb, open again on an early release, and seal in the success colour on confirm.
