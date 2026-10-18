@@ -13,6 +13,7 @@ class ExampleApp extends StatefulWidget {
 class _ExampleAppState extends State<ExampleApp> {
   ThemeMode _mode = ThemeMode.light;
   TextDirection _dir = TextDirection.ltr;
+  TideSlideStyle _style = TideSlideStyle.tide;
 
   @override
   Widget build(BuildContext context) {
@@ -34,14 +35,38 @@ class _ExampleAppState extends State<ExampleApp> {
         body: ListView(
           padding: const EdgeInsets.all(20),
           children: [
-            const _Demo(title: 'Default', child: _Basic()),
-            const _Demo(title: 'Async action with a spinner', child: _Async()),
-            const _Demo(
+            Padding(
+              padding: const EdgeInsets.only(bottom: 28),
+              child: SegmentedButton<TideSlideStyle>(
+                segments: const [
+                  ButtonSegment(
+                    value: TideSlideStyle.tide,
+                    label: Text('Tide'),
+                  ),
+                  ButtonSegment(
+                    value: TideSlideStyle.zipper,
+                    label: Text('Zipper'),
+                  ),
+                ],
+                selected: {_style},
+                onSelectionChanged: (v) => setState(() => _style = v.first),
+              ),
+            ),
+            _Demo(
+              title: 'Default',
+              child: _Basic(style: _style),
+            ),
+            _Demo(
+              title: 'Async action with a spinner',
+              child: _Async(style: _style),
+            ),
+            _Demo(
               title: 'Disabled',
               child: TideSlide(
                 label: 'Slide to pay',
                 onConfirmed: _noop,
                 enabled: false,
+                style: _style,
               ),
             ),
             const SizedBox(height: 8),
@@ -96,7 +121,9 @@ class _Demo extends StatelessWidget {
 }
 
 class _Basic extends StatefulWidget {
-  const _Basic();
+  const _Basic({required this.style});
+
+  final TideSlideStyle style;
 
   @override
   State<_Basic> createState() => _BasicState();
@@ -114,7 +141,13 @@ class _BasicState extends State<_Basic> {
   @override
   Widget build(BuildContext context) {
     return TideSlide(
-      label: 'Slide to pay',
+      label: widget.style == TideSlideStyle.zipper
+          ? 'Slide to seal'
+          : 'Slide to pay',
+      confirmedLabel: widget.style == TideSlideStyle.zipper
+          ? 'Sealed'
+          : 'Confirmed',
+      style: widget.style,
       controller: _controller,
       resetAfter: const Duration(seconds: 2),
       onConfirmed: () => debugPrint('confirmed'),
@@ -123,13 +156,16 @@ class _BasicState extends State<_Basic> {
 }
 
 class _Async extends StatelessWidget {
-  const _Async();
+  const _Async({required this.style});
+
+  final TideSlideStyle style;
 
   @override
   Widget build(BuildContext context) {
     return TideSlide(
       label: 'Slide to send',
       confirmedLabel: 'Sent',
+      style: style,
       resetAfter: const Duration(seconds: 2),
       onConfirmed: () => Future<void>.delayed(const Duration(seconds: 2)),
     );

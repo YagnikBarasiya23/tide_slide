@@ -44,6 +44,38 @@ class ChevronsPainter extends CustomPainter {
       old.color != color || old.rtl != rtl;
 }
 
+/// Three vertical grip lines, like the pull tab of a zipper.
+class GripPainter extends CustomPainter {
+  /// Creates a grip painter.
+  const GripPainter({required this.color});
+
+  /// Stroke colour.
+  final Color color;
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final s = size.shortestSide;
+    final cx = size.width / 2;
+    final cy = size.height / 2;
+    final paint = Paint()
+      ..color = color
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = 2.4
+      ..strokeCap = StrokeCap.round;
+    for (var i = -1; i <= 1; i++) {
+      final x = cx + i * s * 0.14;
+      canvas.drawLine(
+        Offset(x, cy - s * 0.16),
+        Offset(x, cy + s * 0.16),
+        paint,
+      );
+    }
+  }
+
+  @override
+  bool shouldRepaint(GripPainter old) => old.color != color;
+}
+
 /// A tick that draws itself as [progress] goes from 0 to 1.
 class CheckPainter extends CustomPainter {
   /// Creates a tick painter.

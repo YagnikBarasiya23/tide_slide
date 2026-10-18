@@ -10,6 +10,16 @@ import 'glyphs.dart';
 import 'release_logic.dart';
 import 'tide_path.dart';
 import 'tide_slide_colors.dart';
+import 'zipper_painter.dart';
+
+/// The look of a [TideSlide]. Behaviour is the same for every style.
+enum TideSlideStyle {
+  /// A wavy tide of colour rises behind the thumb. The default.
+  tide,
+
+  /// Two rows of teeth mesh shut behind the thumb, like a zipper.
+  zipper,
+}
 
 enum _Phase { idle, dragging, settling, loading, confirmed }
 
@@ -67,9 +77,48 @@ class TideSlide extends StatefulWidget {
     this.confirmedLabel = 'Confirmed',
     this.flingVelocity = 1200,
     this.resetAfter,
+    this.style = TideSlideStyle.tide,
+    this.toothSize = 6,
+    this.toothGap = 4,
   }) : assert(threshold > 0 && threshold <= 1, 'threshold must be in (0, 1]'),
        assert(height >= 40, 'height must be at least 40'),
-       assert(flingVelocity > 0, 'flingVelocity must be positive');
+       assert(flingVelocity > 0, 'flingVelocity must be positive'),
+       assert(toothSize > 0, 'toothSize must be positive'),
+       assert(toothGap >= 0, 'toothGap must not be negative');
+
+  /// Creates a slide-to-confirm control in the [TideSlideStyle.zipper] style.
+  const TideSlide.zipper({
+    Key? key,
+    required String label,
+    required FutureOr<void> Function() onConfirmed,
+    double threshold = 0.85,
+    double height = 56,
+    TideSlideColors? colors,
+    TideSlideController? controller,
+    bool enabled = true,
+    bool loading = false,
+    String confirmedLabel = 'Confirmed',
+    double flingVelocity = 1200,
+    Duration? resetAfter,
+    double toothSize = 6,
+    double toothGap = 4,
+  }) : this(
+         key: key,
+         label: label,
+         onConfirmed: onConfirmed,
+         threshold: threshold,
+         height: height,
+         colors: colors,
+         controller: controller,
+         enabled: enabled,
+         loading: loading,
+         confirmedLabel: confirmedLabel,
+         flingVelocity: flingVelocity,
+         resetAfter: resetAfter,
+         style: TideSlideStyle.zipper,
+         toothSize: toothSize,
+         toothGap: toothGap,
+       );
 
   /// Text on the track, for example "Slide to pay".
   final String label;
@@ -106,6 +155,15 @@ class TideSlide extends StatefulWidget {
 
   /// If set, the control resets by itself this long after confirming.
   final Duration? resetAfter;
+
+  /// The look of the track. Defaults to [TideSlideStyle.tide].
+  final TideSlideStyle style;
+
+  /// Width and height of one zipper tooth. Only used by the zipper style.
+  final double toothSize;
+
+  /// Space between neighbouring zipper teeth. Only used by the zipper style.
+  final double toothGap;
 
   @override
   State<TideSlide> createState() => _TideSlideState();
@@ -162,6 +220,7 @@ class _TideSlideState extends State<TideSlide> with TickerProviderStateMixin {
       _attach(widget.controller);
     }
     if (!widget.enabled && _phase == _Phase.dragging) _springBack(0);
+    if (old.style != widget.style) _syncWave();
   }
 
   @override
@@ -197,7 +256,10 @@ class _TideSlideState extends State<TideSlide> with TickerProviderStateMixin {
 
   void _syncWave() {
     final shouldRun =
-        !_reduced && _phase != _Phase.confirmed && _pos.value > 0.001;
+        widget.style == TideSlideStyle.tide &&
+        !_reduced &&
+        _phase != _Phase.confirmed &&
+        _pos.value > 0.001;
     if (shouldRun && !_wave.isAnimating) {
       _wave.repeat();
     } else if (!shouldRun && _wave.isAnimating) {
@@ -433,20 +495,6 @@ class _TideSlideState extends State<TideSlide> with TickerProviderStateMixin {
   ) {
     final p = _progress;
     final t = Curves.easeOut.transform(_tick.value);
-    final thumbEdge = p <= 0.0005 ? 0.0 : p * _travel + _inset + thumbSize / 2;
-    final edge = _lerp(thumbEdge, size.width + 12, t);
-    final amplitude = _reduced
-        ? 0.0
-        : math.min(1.0, p * 8) * (size.height * 0.09) * (1 - t);
-    final path = buildTidePath(
-      size,
-      edge: edge,
-      phase: _wave.value * 2 * math.pi,
-      amplitude: amplitude,
-      wavelength: size.height * 0.9,
-      rtl: _rtl,
-    );
-    final tideColor = Color.lerp(c.tide, c.success, t)!;
     final text = confirmed ? widget.confirmedLabel : widget.label;
 
     Widget label(Color color) => Center(
@@ -461,7 +509,19 @@ class _TideSlideState extends State<TideSlide> with TickerProviderStateMixin {
       ),
     );
 
-    final onTide = Color.lerp(c.onTide, c.onSuccess, t)!;
+    final layers = switch (widget.style) {
+      TideSlideStyle.tide => _tideLayers(c, size, thumbSize, p, t, label),
+      TideSlideStyle.zipper => _zipperLayers(
+        c,
+        size,
+        thumbSize,
+        p,
+        t,
+        confirmed,
+        label,
+      ),
+    };
+
     final showSpinner = widget.loading || _phase == _Phase.loading;
 
     Widget glyph;
@@ -474,6 +534,8 @@ class _TideSlideState extends State<TideSlide> with TickerProviderStateMixin {
       glyph = CustomPaint(
         painter: CheckPainter(color: c.success, progress: _tick.value),
       );
+    } else if (widget.style == TideSlideStyle.zipper) {
+      glyph = CustomPaint(painter: GripPainter(color: c.thumbIcon));
     } else {
       glyph = CustomPaint(
         painter: ChevronsPainter(color: c.thumbIcon, rtl: _rtl),
@@ -513,20 +575,87 @@ class _TideSlideState extends State<TideSlide> with TickerProviderStateMixin {
       ),
       child: ClipRRect(
         borderRadius: BorderRadius.circular(size.height / 2),
-        child: Stack(
-          children: [
-            Positioned.fill(child: label(c.label)),
-            Positioned.fill(
-              child: CustomPaint(painter: FillPathPainter(path, tideColor)),
-            ),
-            Positioned.fill(
-              child: ClipPath(clipper: PathClipper(path), child: label(onTide)),
-            ),
-            thumb,
-          ],
-        ),
+        child: Stack(children: [...layers, thumb]),
       ),
     );
+  }
+
+  List<Widget> _tideLayers(
+    ResolvedTideColors c,
+    Size size,
+    double thumbSize,
+    double p,
+    double t,
+    Widget Function(Color) label,
+  ) {
+    final thumbEdge = p <= 0.0005 ? 0.0 : p * _travel + _inset + thumbSize / 2;
+    final edge = _lerp(thumbEdge, size.width + 12, t);
+    final amplitude = _reduced
+        ? 0.0
+        : math.min(1.0, p * 8) * (size.height * 0.09) * (1 - t);
+    final path = buildTidePath(
+      size,
+      edge: edge,
+      phase: _wave.value * 2 * math.pi,
+      amplitude: amplitude,
+      wavelength: size.height * 0.9,
+      rtl: _rtl,
+    );
+    final tideColor = Color.lerp(c.tide, c.success, t)!;
+    final onTide = Color.lerp(c.onTide, c.onSuccess, t)!;
+    return [
+      Positioned.fill(child: label(c.label)),
+      Positioned.fill(
+        child: CustomPaint(painter: FillPathPainter(path, tideColor)),
+      ),
+      Positioned.fill(
+        child: ClipPath(clipper: PathClipper(path), child: label(onTide)),
+      ),
+    ];
+  }
+
+  List<Widget> _zipperLayers(
+    ResolvedTideColors c,
+    Size size,
+    double thumbSize,
+    double p,
+    double t,
+    bool confirmed,
+    Widget Function(Color) label,
+  ) {
+    final open = c.label.withValues(alpha: 0.45);
+    final shut = Color.lerp(c.tide, c.onSuccess.withValues(alpha: 0.22), t)!;
+    return [
+      if (t > 0)
+        Positioned.fill(
+          child: ColoredBox(color: c.success.withValues(alpha: t)),
+        ),
+      Positioned.fill(
+        child: CustomPaint(
+          painter: ZipperPainter(
+            thumbCenter: _inset + p * _travel + thumbSize / 2,
+            toothSize: widget.toothSize,
+            toothGap: widget.toothGap,
+            openColor: open,
+            closedColor: shut,
+            rtl: _rtl,
+            reduced: _reduced,
+            settle: t,
+          ),
+        ),
+      ),
+      Positioned.fill(
+        child: confirmed
+            ? Opacity(opacity: t, child: label(c.onSuccess))
+            : ClipRect(
+                clipper: AheadClipper(
+                  leading: _inset + p * _travel + thumbSize,
+                  rtl: _rtl,
+                ),
+                child: label(c.label),
+              ),
+      ),
+    ];
   }
 }
 

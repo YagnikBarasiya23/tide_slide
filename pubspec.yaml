@@ -1,6 +1,6 @@
 name: tide_slide
-description: A slide-to-confirm control for Flutter. A wavy tide rises behind the thumb and the label flips colour as it passes. LTR, RTL, keyboard and screen reader ready.
-version: 1.0.0
+description: A slide-to-confirm control for Flutter in two styles, a rising tide or a zipper that seals shut. LTR, RTL, keyboard and screen reader ready.
+version: 1.1.0
 repository: https://github.com/YagnikBarasiya23/tide_slide
 issue_tracker: https://github.com/YagnikBarasiya23/tide_slide/issues
 topics:
@@ -12,6 +12,8 @@ topics:
 screenshots:
   - description: Tide rising behind the thumb while dragging.
     path: doc/screenshot.png
+  - description: Zipper style, teeth meshing shut behind the thumb.
+    path: doc/zipper.png
 
 environment:
   sdk: ^3.13.0

@@ -23,7 +23,7 @@ class TideSlideColors {
   /// Track outline.
   final Color? border;
 
-  /// The rising tide behind the thumb.
+  /// The rising tide behind the thumb, or the closed teeth in the zipper style.
   final Color? tide;
 
   /// Label colour where the tide covers it.

@@ -11,7 +11,7 @@ A slide-to-confirm control for risky actions. Drag the thumb and a wavy tide of 
 
 ```yaml
 dependencies:
-  tide_slide: ^1.0.0
+  tide_slide: ^1.1.0
 ```
 
 ## Usage
@@ -45,6 +45,32 @@ controller.reset();
 
 If the future throws, the error is reported with `FlutterError.reportError` and the control resets.
 
+## Styles
+
+Two looks share the same behaviour, options and controller.
+
+| Style | Look |
+|---|---|
+| `TideSlideStyle.tide` (default) | A wavy tide rises behind the thumb and the label flips colour at the wave. |
+| `TideSlideStyle.zipper` | Two rows of teeth mesh shut behind a zipper-pull thumb. Let go early and they open again. Confirm seals the track in the success colour. |
+
+```dart
+TideSlide.zipper(
+  label: 'Slide to seal',
+  confirmedLabel: 'Sealed',
+  onConfirmed: () => seal(),
+)
+
+// same as
+TideSlide(
+  style: TideSlideStyle.zipper,
+  label: 'Slide to seal',
+  onConfirmed: () => seal(),
+)
+```
+
+![Zipper demo](media/zipper.gif)
+
 ## Options
 
 | Parameter | Default | Description |
@@ -60,10 +86,13 @@ If the future throws, the error is reported with `FlutterError.reportError` and 
 | `confirmedLabel` | `'Confirmed'` | Label after confirming, also read by screen readers. |
 | `flingVelocity` | `1200` | Forward release speed (px/s) that confirms a short drag once past halfway. |
 | `resetAfter` | none | Resets by itself this long after confirming. |
+| `style` | `TideSlideStyle.tide` | `tide` or `zipper`. |
+| `toothSize` | `6` | Zipper only. Width and height of one tooth. |
+| `toothGap` | `4` | Zipper only. Space between teeth in a row. |
 
 `TideSlideController`: `reset()`, `confirm()`, `isConfirmed`, `isLoading`. It is a `ChangeNotifier`, so you can listen to it.
 
-`TideSlideColors`: `track`, `border`, `tide`, `onTide`, `thumb`, `thumbIcon`, `label`, `success`, `onSuccess`.
+`TideSlideColors`: `track`, `border`, `tide`, `onTide`, `thumb`, `thumbIcon`, `label`, `success`, `onSuccess`. In the zipper style, `tide` colours the closed teeth.
 
 The control takes its width from its parent. In an unbounded width it falls back to 300.
 
@@ -71,8 +100,8 @@ The control takes its width from its parent. In an unbounded width it falls back
 
 - Screen readers get a button with your label. Activating it (double tap) confirms directly, so no drag is needed.
 - Keyboard: Tab to focus. Arrow keys move the thumb in steps of 10 percent (the arrow that points toward the end moves forward, also in RTL). Enter or Space confirms. Home resets the thumb.
-- Reduced motion (`MediaQuery.disableAnimations`): the wave stops moving and the spring-back becomes a short linear return.
-- Right-to-left layouts mirror the thumb, tide and chevrons.
+- Reduced motion (`MediaQuery.disableAnimations`): the wave stops moving, zipper teeth switch with a hard cut instead of easing, and the spring-back becomes a short linear return.
+- Right-to-left layouts mirror the thumb, tide, teeth and chevrons.
 
 ## Platforms
 
