@@ -436,7 +436,7 @@ class _TideSlideState extends State<TideSlide> with TickerProviderStateMixin {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final colors = (widget.colors ?? const TideSlideColors()).resolve(theme);
+    final colors = _resolveColors(theme);
     _rtl = Directionality.of(context) == TextDirection.rtl;
     final h = widget.height;
     final thumbSize = h - 2 * _inset;
@@ -509,17 +509,10 @@ class _TideSlideState extends State<TideSlide> with TickerProviderStateMixin {
       ),
     );
 
+    final zipper = widget.style == TideSlideStyle.zipper;
     final layers = switch (widget.style) {
       TideSlideStyle.tide => _tideLayers(c, size, thumbSize, p, t, label),
-      TideSlideStyle.zipper => _zipperLayers(
-        c,
-        size,
-        thumbSize,
-        p,
-        t,
-        confirmed,
-        label,
-      ),
+      TideSlideStyle.zipper => _zipperLayers(c, size, thumbSize, p, t),
     };
 
     final showSpinner = widget.loading || _phase == _Phase.loading;
@@ -532,9 +525,12 @@ class _TideSlideState extends State<TideSlide> with TickerProviderStateMixin {
       );
     } else if (confirmed) {
       glyph = CustomPaint(
-        painter: CheckPainter(color: c.success, progress: _tick.value),
+        painter: CheckPainter(
+          color: zipper ? c.onSuccess : c.success,
+          progress: _tick.value,
+        ),
       );
-    } else if (widget.style == TideSlideStyle.zipper) {
+    } else if (zipper) {
       glyph = CustomPaint(painter: GripPainter(color: c.thumbIcon));
     } else {
       glyph = CustomPaint(
@@ -557,7 +553,7 @@ class _TideSlideState extends State<TideSlide> with TickerProviderStateMixin {
         child: DecoratedBox(
           decoration: BoxDecoration(
             shape: BoxShape.circle,
-            color: c.thumb,
+            color: zipper ? Color.lerp(c.thumb, c.success, t) : c.thumb,
             border: _focused
                 ? Border.all(color: c.tide, width: 2.5)
                 : Border.all(color: c.border, width: 1),
@@ -567,11 +563,19 @@ class _TideSlideState extends State<TideSlide> with TickerProviderStateMixin {
       ),
     );
 
+    final successTrack = Color.alphaBlend(
+      c.success.withValues(alpha: 0.18),
+      c.track,
+    );
+    final successBorder = c.success.withValues(alpha: 0.45);
     return DecoratedBox(
       decoration: BoxDecoration(
-        color: c.track,
+        color: zipper ? Color.lerp(c.track, successTrack, t) : c.track,
         borderRadius: BorderRadius.circular(size.height / 2),
-        border: Border.all(color: c.border, width: 1),
+        border: Border.all(
+          color: zipper ? Color.lerp(c.border, successBorder, t)! : c.border,
+          width: 1,
+        ),
       ),
       child: ClipRRect(
         borderRadius: BorderRadius.circular(size.height / 2),
@@ -620,42 +624,70 @@ class _TideSlideState extends State<TideSlide> with TickerProviderStateMixin {
     double thumbSize,
     double p,
     double t,
-    bool confirmed,
-    Widget Function(Color) label,
   ) {
-    final open = c.label.withValues(alpha: 0.45);
-    final shut = Color.lerp(c.tide, c.onSuccess.withValues(alpha: 0.22), t)!;
+    final h = size.height;
     return [
-      if (t > 0)
-        Positioned.fill(
-          child: ColoredBox(color: c.success.withValues(alpha: t)),
-        ),
       Positioned.fill(
         child: CustomPaint(
           painter: ZipperPainter(
             thumbCenter: _inset + p * _travel + thumbSize / 2,
             toothSize: widget.toothSize,
             toothGap: widget.toothGap,
-            openColor: open,
-            closedColor: shut,
+            openColor: c.label.withValues(alpha: 0.45),
+            closedColor: c.tide,
+            successColor: c.success,
             rtl: _rtl,
             reduced: _reduced,
-            settle: t,
+            success: t,
           ),
         ),
       ),
+      // The label sits centred over the teeth and is only drawn ahead of the
+      // thumb, so it is gone once the thumb reaches the end.
       Positioned.fill(
-        child: confirmed
-            ? Opacity(opacity: t, child: label(c.onSuccess))
-            : ClipRect(
-                clipper: AheadClipper(
-                  leading: _inset + p * _travel + thumbSize,
-                  rtl: _rtl,
-                ),
-                child: label(c.label),
+        child: ClipRect(
+          clipper: AheadClipper(
+            leading: _inset + p * _travel + thumbSize,
+            rtl: _rtl,
+          ),
+          child: Padding(
+            padding: EdgeInsetsDirectional.only(start: h, end: h * 0.25),
+            child: Center(
+              child: Text(
+                widget.label,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: _labelStyle(context).copyWith(color: c.label),
               ),
+            ),
+          ),
+        ),
       ),
     ];
+  }
+
+  TextStyle _labelStyle(BuildContext context) =>
+      (Theme.of(context).textTheme.labelLarge ?? const TextStyle()).copyWith(
+        fontWeight: FontWeight.w600,
+      );
+
+  ResolvedTideColors _resolveColors(ThemeData theme) {
+    final given = widget.colors ?? const TideSlideColors();
+    final c = given.resolve(theme);
+    if (widget.style != TideSlideStyle.zipper) return c;
+    // The zipper pull reads best as a solid dark (or light, in dark mode) tab.
+    final scheme = theme.colorScheme;
+    return ResolvedTideColors(
+      track: c.track,
+      border: c.border,
+      tide: c.tide,
+      onTide: c.onTide,
+      thumb: given.thumb ?? scheme.onSurface,
+      thumbIcon: given.thumbIcon ?? scheme.surface,
+      label: c.label,
+      success: c.success,
+      onSuccess: c.onSuccess,
+    );
   }
 }
 

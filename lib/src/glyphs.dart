@@ -44,12 +44,12 @@ class ChevronsPainter extends CustomPainter {
       old.color != color || old.rtl != rtl;
 }
 
-/// Three vertical grip lines, like the pull tab of a zipper.
+/// A grip of two columns of three dots, like the pull tab of a zipper.
 class GripPainter extends CustomPainter {
   /// Creates a grip painter.
   const GripPainter({required this.color});
 
-  /// Stroke colour.
+  /// Dot colour.
   final Color color;
 
   @override
@@ -57,18 +57,15 @@ class GripPainter extends CustomPainter {
     final s = size.shortestSide;
     final cx = size.width / 2;
     final cy = size.height / 2;
-    final paint = Paint()
-      ..color = color
-      ..style = PaintingStyle.stroke
-      ..strokeWidth = 2.4
-      ..strokeCap = StrokeCap.round;
-    for (var i = -1; i <= 1; i++) {
-      final x = cx + i * s * 0.14;
-      canvas.drawLine(
-        Offset(x, cy - s * 0.16),
-        Offset(x, cy + s * 0.16),
-        paint,
-      );
+    final paint = Paint()..color = color;
+    for (final dx in [-1, 1]) {
+      for (final dy in [-1, 0, 1]) {
+        canvas.drawCircle(
+          Offset(cx + dx * s * 0.08, cy + dy * s * 0.14),
+          s * 0.045,
+          paint,
+        );
+      }
     }
   }
 

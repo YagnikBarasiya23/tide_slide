@@ -52,7 +52,7 @@ Two looks share the same behaviour, options and controller.
 | Style | Look |
 |---|---|
 | `TideSlideStyle.tide` (default) | A wavy tide rises behind the thumb and the label flips colour at the wave. |
-| `TideSlideStyle.zipper` | Two rows of teeth mesh shut behind a zipper-pull thumb. Let go early and they open again. Confirm seals the track in the success colour. |
+| `TideSlideStyle.zipper` | Two rows of teeth mesh shut behind a zipper-pull thumb. Let go early and they open again. On confirm the seam, track and thumb turn the success colour and the thumb shows a tick. No confirmed text is drawn; `confirmedLabel` is still announced to screen readers. |
 
 ```dart
 TideSlide.zipper(

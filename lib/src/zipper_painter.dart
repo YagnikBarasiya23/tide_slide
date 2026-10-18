@@ -44,33 +44,35 @@ class ZipperTooth {
 
 /// Lays out the two rows of teeth for a track of [size].
 ///
-/// [thumbCenter] is the thumb centre measured from the start edge. [settle]
-/// goes from 0 to 1 after confirming and closes every tooth.
+/// [thumbCenter] is the thumb centre measured from the start edge. Teeth start
+/// one track height in, just past the resting thumb, and run to the far end.
+/// Proportions follow a 56 px track with 6 px teeth: rows sit 6 px from the
+/// edges when open and overlap by 1 px when closed.
 List<ZipperTooth> layoutZipper(
   Size size, {
   required double thumbCenter,
   required double toothSize,
   required double toothGap,
   bool reduced = false,
-  double settle = 0,
 }) {
   final h = size.height;
   final pitch = toothSize + toothGap;
   if (size.isEmpty || pitch <= 0) return const [];
-  final openTop = h * 0.12;
-  final openBottom = h * 0.88 - toothSize;
-  final shutTop = h / 2 - toothSize * 0.8;
-  final shutBottom = h / 2 - toothSize * 0.2;
-  final blend = h * 0.7;
+  final half = pitch / 2;
+  final openTop = h * 6 / 56;
+  final openBottom = h - openTop - toothSize;
+  final shutTop = h / 2 - toothSize;
+  final shutBottom = h / 2 - toothSize / 6;
+  final blend = h * 40 / 56;
+  final end = size.width - h * 3 / 56;
   final teeth = <ZipperTooth>[];
-  for (var x = h * 0.5; x + pitch <= size.width - h * 0.5 + 0.01; x += pitch) {
-    var k = zipperClosedAmount(
+  for (var x = h; x + half + toothSize <= end + 0.01; x += pitch) {
+    final k = zipperClosedAmount(
       toothX: x,
       thumbCenter: thumbCenter,
       blend: blend,
       reduced: reduced,
     );
-    k = k + (1 - k) * settle;
     teeth.add(
       ZipperTooth(
         x: x,
@@ -92,9 +94,10 @@ class ZipperPainter extends CustomPainter {
     required this.toothGap,
     required this.openColor,
     required this.closedColor,
+    required this.successColor,
     required this.rtl,
     required this.reduced,
-    required this.settle,
+    required this.success,
   });
 
   /// Thumb centre from the start edge.
@@ -112,14 +115,17 @@ class ZipperPainter extends CustomPainter {
   /// Colour of meshed teeth.
   final Color closedColor;
 
+  /// Colour of every tooth once confirmed.
+  final Color successColor;
+
   /// Whether the track runs right to left.
   final bool rtl;
 
   /// Whether reduced motion is on.
   final bool reduced;
 
-  /// Confirm progress from 0 to 1.
-  final double settle;
+  /// Confirm progress from 0 to 1. Turns every tooth [successColor].
+  final double success;
 
   @override
   void paint(Canvas canvas, Size size) {
@@ -134,13 +140,13 @@ class ZipperPainter extends CustomPainter {
       toothSize: toothSize,
       toothGap: toothGap,
       reduced: reduced,
-      settle: settle,
     );
     final half = (toothSize + toothGap) / 2;
-    final r = Radius.circular(toothSize * 0.3);
+    final r = Radius.circular(toothSize * 0.25);
     final paint = Paint();
     for (final t in teeth) {
-      paint.color = Color.lerp(openColor, closedColor, t.closed)!;
+      final base = Color.lerp(openColor, closedColor, t.closed)!;
+      paint.color = Color.lerp(base, successColor, success)!;
       canvas
         ..drawRRect(
           RRect.fromLTRBR(t.x, t.top, t.x + toothSize, t.top + toothSize, r),
@@ -166,9 +172,10 @@ class ZipperPainter extends CustomPainter {
       old.toothGap != toothGap ||
       old.openColor != openColor ||
       old.closedColor != closedColor ||
+      old.successColor != successColor ||
       old.rtl != rtl ||
       old.reduced != reduced ||
-      old.settle != settle;
+      old.success != success;
 }
 
 /// Clips a child to the part of the track ahead of the thumb.

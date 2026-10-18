@@ -1,6 +1,9 @@
 ## 1.1.1
 
-- Package size: build outputs were included in the 1.1.0 archive by mistake. No code changes.
+- Package size: build outputs were included in the 1.1.0 archive by mistake.
+- Zipper style now matches the approved design: teeth start just past the resting thumb and run to the end of the track, open rows sit 6 px from the edges and closed rows overlap by 1 px (on a 56 px track), and the label is centred over the teeth.
+- Zipper confirm: the seam keeps its shape and turns the success colour, the track takes a success tint, and the thumb turns solid success with a tick. No confirmed text is drawn on the track.
+- Zipper thumb is a solid tab with a two-by-three dot grip by default.
 
 ## 1.1.0
 

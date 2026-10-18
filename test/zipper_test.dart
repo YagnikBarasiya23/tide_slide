@@ -66,7 +66,6 @@ List<ZipperTooth> teethOf(WidgetTester tester) {
     toothSize: z.toothSize,
     toothGap: z.toothGap,
     reduced: z.reduced,
-    settle: z.settle,
   );
 }
 
@@ -105,16 +104,37 @@ void main() {
       expect(k(99), 1);
     });
 
-    test('settle closes every tooth', () {
+    test('teeth start past the resting thumb and run to the track end', () {
       final teeth = layoutZipper(
         const Size(300, 56),
         thumbCenter: restCenter,
         toothSize: 6,
         toothGap: 4,
-        settle: 1,
       );
-      expect(teeth, isNotEmpty);
-      expect(teeth.every((t) => t.closed == 1), isTrue);
+      expect(teeth.length, 24);
+      expect(teeth.first.x, 56);
+      expect(teeth.last.x, 286);
+      expect(teeth.last.x + 5 + 6, 297);
+      expect(teeth.every((t) => t.closed == 0), isTrue);
+    });
+
+    test('open rows sit 6 px from the edges, closed rows overlap by 1 px', () {
+      final open = layoutZipper(
+        const Size(300, 56),
+        thumbCenter: 0,
+        toothSize: 6,
+        toothGap: 4,
+      ).first;
+      expect(open.top, closeTo(6, 1e-9));
+      expect(open.bottom, closeTo(44, 1e-9));
+      final shut = layoutZipper(
+        const Size(300, 56),
+        thumbCenter: 400,
+        toothSize: 6,
+        toothGap: 4,
+      ).first;
+      expect(shut.top, closeTo(22, 1e-9));
+      expect(shut.bottom, closeTo(27, 1e-9));
     });
 
     test('closed teeth overlap so the rows interlock', () {
@@ -216,7 +236,7 @@ void main() {
     expect(find.text('Slide to seal'), findsOneWidget);
   });
 
-  testWidgets('confirm closes every tooth and shows the success state', (
+  testWidgets('confirm keeps the seam, turns it green and shows no text', (
     tester,
   ) async {
     var calls = 0;
@@ -224,9 +244,30 @@ void main() {
     await drag(tester, travel);
     await settle(tester, 1);
     expect(calls, 1);
-    expect(zipper(tester).settle, 1);
-    expect(teethOf(tester).every((t) => t.closed == 1), isTrue);
-    expect(find.text('Sealed'), findsOneWidget);
+    final z = zipper(tester);
+    expect(z.success, 1);
+    expect(z.thumbCenter, closeTo(restCenter + travel, 0.5));
+    final teeth = teethOf(tester);
+    expect(
+      teeth.where((t) => t.x <= z.thumbCenter - 40).every((t) => t.closed == 1),
+      isTrue,
+    );
+    expect(
+      teeth.where((t) => t.x >= z.thumbCenter).every((t) => t.closed == 0),
+      isTrue,
+    );
+    expect(find.text('Sealed'), findsNothing);
+    expect(find.text('Slide to seal'), findsOneWidget);
+    final clip = tester.widget<ClipRect>(
+      find
+          .descendant(
+            of: find.byType(TideSlide),
+            matching: find.byType(ClipRect),
+          )
+          .first,
+    );
+    expect((clip.clipper! as AheadClipper).leading, closeTo(296, 0.5));
+    expect(tester.getSemantics(find.byType(TideSlide)).value, 'Sealed');
     expect(tester.hasRunningAnimations, isFalse);
   });
 
@@ -283,8 +324,8 @@ void main() {
       toothGap: 4,
     );
     for (final t in teeth) {
-      expect(t.x, greaterThanOrEqualTo(size.height / 2));
-      expect(t.x + 10 + 6, lessThanOrEqualTo(size.width - size.height / 2 + 6));
+      expect(t.x, greaterThanOrEqualTo(size.height));
+      expect(t.x + 5 + 6, lessThanOrEqualTo(size.width - 3));
       expect(t.top, greaterThanOrEqualTo(0));
       expect(t.bottom + 6, lessThanOrEqualTo(size.height));
     }
