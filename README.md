@@ -1,17 +1,24 @@
-# tide_slide
+<p align="center">
+  <a href="https://github.com/YagnikBarasiya23/tide_slide"><img src="https://raw.githubusercontent.com/YagnikBarasiya23/tide_slide/main/media/banner.png" width="800" alt="Tide Slide, a Wiiby component: a Flutter slide-to-confirm with a rising tide or a zipper"></a>
+</p>
 
-[![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
-[![pub package](https://img.shields.io/pub/v/tide_slide.svg)](https://pub.dev/packages/tide_slide)
+<p align="center">
+  <a href="https://pub.dev/packages/tide_slide"><img src="https://img.shields.io/pub/v/tide_slide.svg?color=1f2a3a" alt="pub package"></a>
+  <a href="https://pub.dev/packages/tide_slide/score"><img src="https://img.shields.io/pub/points/tide_slide?color=1f2a3a" alt="pub points"></a>
+  <a href="https://github.com/YagnikBarasiya23/tide_slide/blob/main/LICENSE"><img src="https://img.shields.io/badge/licence-MIT-1f2a3a.svg" alt="MIT licence"></a>
+</p>
 
 A slide-to-confirm control for risky actions. Drag the thumb and a wavy tide of colour rises behind it. The label flips colour exactly where the wave passes. Let go early and the thumb springs back. Pull it past the threshold and it snaps to the end, runs your callback and draws a tick.
 
-![Demo](media/demo.gif)
+<p align="center">
+  <img src="https://raw.githubusercontent.com/YagnikBarasiya23/tide_slide/main/media/demo-hd.gif" width="800" alt="Two slide-to-confirm controls: dragging the thumb raises a wavy tide behind it, and a zipper style seals shut as the thumb slides.">
+</p>
 
 ## Install
 
 ```yaml
 dependencies:
-  tide_slide: ^1.1.1
+  tide_slide: ^1.1.2
 ```
 
 ## Usage
@@ -69,7 +76,7 @@ TideSlide(
 )
 ```
 
-![Zipper demo](media/zipper.gif)
+![Zipper demo](https://raw.githubusercontent.com/YagnikBarasiya23/tide_slide/main/media/zipper.gif)
 
 ## Options
 
@@ -118,4 +125,4 @@ flutter run -d chrome
 
 ## Licence
 
-MIT. See [LICENSE](LICENSE).
+MIT. See [LICENSE](https://github.com/YagnikBarasiya23/tide_slide/blob/main/LICENSE).

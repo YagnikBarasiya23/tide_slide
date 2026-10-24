@@ -1,3 +1,7 @@
+## 1.1.2
+
+- README: Wiiby banner and HD (2x) demo, with absolute image links so the npm and pub.dev pages show them. No code changes.
+
 ## 1.1.1
 
 - Package size: build outputs were included in the 1.1.0 archive by mistake.
