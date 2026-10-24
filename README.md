@@ -1,5 +1,5 @@
 <p align="center">
-  <a href="https://github.com/YagnikBarasiya23/tide_slide"><img src="https://raw.githubusercontent.com/YagnikBarasiya23/tide_slide/main/media/banner.png" width="800" alt="Tide Slide, a Wiiby component: a Flutter slide-to-confirm with a rising tide or a zipper"></a>
+  <img src="https://raw.githubusercontent.com/YagnikBarasiya23/tide_slide/main/media/banner.png" width="800" alt="Tide Slide, a Wiiby component: a Flutter slide-to-confirm with a rising tide or a zipper">
 </p>
 
 <p align="center">
@@ -18,7 +18,7 @@ A slide-to-confirm control for risky actions. Drag the thumb and a wavy tide of 
 
 ```yaml
 dependencies:
-  tide_slide: ^1.1.2
+  tide_slide: ^1.1.3
 ```
 
 ## Usage
